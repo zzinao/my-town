@@ -59,7 +59,7 @@ const Input = (props) => {
   }
 }
 Input.defaultProps = {
-  label: '텍스트',
+  label: '',
   placeholder: '텍스트를 입력하세용',
   _onChange: () => {},
   _onSubmit: () => {},
@@ -84,5 +84,6 @@ const TextAreaField = styled.textarea`
   box-sizing: border-box;
   padding: 10px;
   border: 1px solid #ddd;
+  margin: 10px;
 `
 export default Input

@@ -22,17 +22,10 @@ const CommentWrite = (props) => {
         <Input
           _onChange={writeComment}
           value={comment_text}
-          placeholder="댓글 내용을 입력해주세요 :)"
+          placeholder="댓글을 달아주시라요"
           value={comment_text}
         />
-        <Button
-          _onClick={onChange}
-          width="50px"
-          margin="0px 2px 0px 2px"
-          text="작성"
-        >
-          작성
-        </Button>
+        <Button _onClick={onChange} text="작성" width="20px" />
       </Grid>
     </React.Fragment>
   )

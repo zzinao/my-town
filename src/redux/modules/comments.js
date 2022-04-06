@@ -1,19 +1,21 @@
 import { createAction, handleActions } from 'redux-actions'
 import { produce } from 'immer'
-import { firestore } from '../../shared/firebase'
+import { realtime } from '../../shared/firebase'
 import firebase from 'firebase/compat/app'
 import {
   getDocs,
+  doc,
   addDoc,
   collection,
   query,
   where,
   orderBy,
   updateDoc,
+  increment,
 } from 'firebase/firestore'
 import { db } from '../../shared/firebase'
 import { actionCreators as postActions } from './post'
-import { update } from 'lodash'
+import { ref, update, push } from 'firebase/database'
 import moment from 'moment'
 
 const SET_COMMENT = 'SET_COMMENT'
@@ -41,6 +43,7 @@ const addCommentFB = (post_id, contents) => {
   return async function (dispatch, getState, { history }) {
     // const commentDB = collection(db, 'comment')
     const user_info = getState().user.user
+    const postDB = collection(db, 'comment')
     const post = getState().post.list.find((l) => l.id === post_id)
 
     let comment = {
@@ -49,16 +52,18 @@ const addCommentFB = (post_id, contents) => {
       user_name: user_info.user_name,
       user_profile: user_info.user_profile,
       contents: contents,
-      insert_dt: moment().format('YYYY-MM-DD hh:mm:ss'),
+      insert_dt: moment().format('YYYY-MM-DD hh:mm'),
     }
 
-    await addDoc(collection(db, 'comment'), { comment }).then(async (doc) => {
-      const postDB = collection(db, 'post')
+    await addDoc(postDB, comment).then(async (i) => {
+      const post = getState().post.list.find((l) => l.id === post_id)
+      comment = { ...comment, id: i.id }
+      //   const increment = firebase.firestore.FieldValue.increment(1){ comment_cnt: increment }
+      //   comment = { ...comment, id: doc.id }
 
-      const increment = firebase.firestore.FieldValue.increment(1)
-      comment = { ...comment, id: doc.id }
-
-      await updateDoc(postDB, { comment_cnt: increment }).then((_post) => {
+      await updateDoc(doc(db, 'post', post_id), {
+        comment_cnt: increment(1),
+      }).then(async (_post) => {
         dispatch(addComment(post_id, comment))
 
         if (post) {
@@ -67,32 +72,45 @@ const addCommentFB = (post_id, contents) => {
               comment_cnt: parseInt(post.comment_cnt) + 1,
             }),
           )
+          const _noti_item = ref(
+            realtime,
+            `noti/${post.user_info.user_id}/list`,
+          )
+          await push(_noti_item, {
+            post_id: post_id,
+            user_name: comment.user_name,
+            image_url: post.image_url,
+            insert_dt: comment.insert_dt,
+          }).then((i) => {
+            const notiDB = ref(realtime, `noti/${post.user_info.user_id}`)
+            update(notiDB, { read: false })
+          })
         }
       })
     })
   }
 }
 
-const getCommentFB = (post_id) => {
+const getCommentFB = (post_id = null) => {
   return async function (dispatch, getState, { history }) {
     if (!post_id) {
       return
     }
     const commentDB = collection(db, 'comment')
     console.log(commentDB)
-    const q = query(commentDB, where('post_id', '==', post_id))
-    console.log("i'm here,,")
-    // console.log(q)
-    console.log(post_id)
-
+    let list = []
+    const q = query(
+      commentDB,
+      where('post_id', '==', post_id),
+      orderBy('insert_dt', 'desc'),
+    )
     await getDocs(q)
       .then((docs) => {
-        let list = []
         docs.forEach((doc) => {
           console.log(doc.data())
           list.push({ ...doc.data(), id: doc.id })
         })
-
+        console.log(list)
         dispatch(setComment(post_id, list))
       })
 

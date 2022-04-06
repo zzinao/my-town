@@ -7,6 +7,7 @@ import { actionCreators as commentActions } from '../redux/modules/comments'
 const CommentList = (props) => {
   const dispatch = useDispatch()
   const comment_list = useSelector((state) => state.comment.list)
+  console.log(comment_list)
 
   const { post_id } = props
 
@@ -16,6 +17,7 @@ const CommentList = (props) => {
       dispatch(commentActions.getCommentFB(post_id))
     }
   }, [])
+
   //post_id를 props로 받아오고 그 post_id도 database에서 가져오므로
   //post_id가 없는 순간이 생기면서 comment_list[post_id]에 아무 것도 없게 된다
   //또는 달린 댓글이 없을때도 map함수를 돌리면 오류가 나므로 이 조건 추가해야함!
@@ -23,6 +25,7 @@ const CommentList = (props) => {
   if (!comment_list[post_id] || !post_id) {
     return null
   }
+  console.log(comment_list)
 
   return (
     <React.Fragment>
@@ -56,7 +59,8 @@ CommentList.defaultProps = {
 }
 
 CommentItem.defaultProps = {
-  user_profile: '',
+  user_profile:
+    'http://mstatic2.e-himart.co.kr/contents/goods/00/13/15/42/17/0013154217__MW58869_1597932__2_640_640.jpg',
   user_name: 'mean0',
   user_id: '',
   post_id: 1,

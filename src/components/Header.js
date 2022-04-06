@@ -9,7 +9,7 @@ import { history } from '../redux/configureStore'
 import { apiKey } from '../shared/firebase'
 
 import NotiBadge from './NotiBadge'
-import { FiLogOut } from 'react-icons/fi'
+import { FiLogOut, FiUser } from 'react-icons/fi'
 
 const Header = (props) => {
   const dispatch = useDispatch()
@@ -36,11 +36,11 @@ const Header = (props) => {
             </Text>
           </Grid>
 
-          <Grid is_flex>
-            <Button text="내정보"></Button>
+          <Grid is_flex width="20%">
+            <FiUser size="25" />
             <NotiBadge
               _onClick={() => {
-                history.push('./noti')
+                history.push('/noti')
               }}
             ></NotiBadge>
             <FiLogOut

@@ -2,6 +2,7 @@ import { initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
 import { getStorage, ref } from 'firebase/storage'
+import { getDatabase } from 'firebase/database'
 
 export const apiKey = 'AIzaSyALcMLE3Mut9m3EoQo3JLZhaGMjGlFOYcA'
 
@@ -15,11 +16,12 @@ const firebaseConfig = {
   measurementId: 'G-BW3EK9S7H2',
 }
 // Initialize Firebase
-const firebaseApp = initializeApp(firebaseConfig)
-const storage = getStorage(firebaseApp)
+const firebase = initializeApp(firebaseConfig)
+const storage = getStorage()
 
 // auth 설정!!!
 const auth = getAuth()
-const db = getFirestore(firebaseApp)
+const db = getFirestore()
+const realtime = getDatabase(firebase)
 
-export { ref, db, storage, auth, firebaseApp }
+export { ref, db, storage, auth, realtime, firebase }

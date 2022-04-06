@@ -2,8 +2,17 @@ import React from 'react'
 import { Grid, Image, Text, Button } from '../elements/index'
 import { history } from '../redux/configureStore'
 import { FiEdit3 } from 'react-icons/fi'
+import { AiFillDelete } from 'react-icons/ai'
+import { actionCreators as postActions } from '../redux/modules/post'
+import { useDispatch } from 'react-redux'
 
 const Post = (props) => {
+  const dispatch = useDispatch()
+
+  const deleteHandle = () => {
+    dispatch(postActions.deletePostFB(props.id))
+  }
+
   return (
     <React.Fragment>
       <Grid>
@@ -12,24 +21,18 @@ const Post = (props) => {
             <Image shape="circle" src={props.src} />
             <Text bold>{props.user_info.user_name}</Text>
           </Grid>
-          <Grid is_flex width="35%" is_flex>
+          <Grid is_flex width="240px" is_flex>
             <Text>{props.insert_dt}</Text>
             {props.is_me && (
-              <FiEdit3
-                size="20"
-                onClick={() => {
-                  history.push(`/write/${props.id}`)
-                }}
-              />
-              // <Button
-              //   width="auto"
-              //   margin="2px"
-              //   padding="2px"
-              //   text="수정"
-              //   _onClick={() => {
-              //     history.push(`/write/${props.id}`)
-              //   }}
-              // />
+              <>
+                <AiFillDelete size="20" onClick={deleteHandle} />
+                <FiEdit3
+                  size="20"
+                  onClick={() => {
+                    history.push(`/write/${props.id}`)
+                  }}
+                />
+              </>
             )}
           </Grid>
         </Grid>

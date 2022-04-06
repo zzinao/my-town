@@ -65,6 +65,11 @@ const Container = styled.div`
   margin: 0 auto;
 `
 
+// const Title = styled.div`
+//   height: 100px;
+//   background-color: green;
+// `
+
 const Navigation = styled.nav`
   .plus_btn {
     color: #ddd;

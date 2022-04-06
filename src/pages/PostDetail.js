@@ -5,6 +5,7 @@ import CommentList from '../components/CommentList'
 import CommentWrite from '../components/CommentWrite'
 import { useSelector, useDispatch } from 'react-redux'
 import { actionCreators as postActions } from '../redux/modules/post'
+import Permit from '../shared/Permit'
 
 const PostDetail = (props) => {
   const dispatch = useDispatch()
@@ -35,14 +36,13 @@ const PostDetail = (props) => {
       {post && (
         <>
           <Post {...post} is_me={post.user_info?.user_id === user_info?.uid} />
-          {post.user_info.user_id === user_info?.uid ? (
-            <Button _onClick={deletePost} text="삭제하기~">
-              삭제하기
-            </Button>
-          ) : null}
+          {post.user_info.user_id === user_info?.uid ? '' : null}
         </>
       )}
-      <CommentWrite post_id={id} />
+      <Permit>
+        <CommentWrite post_id={id} />
+      </Permit>
+
       <CommentList post_id={id} />
     </React.Fragment>
   )

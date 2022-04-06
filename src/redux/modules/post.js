@@ -12,6 +12,7 @@ import {
   limit,
   updateDoc,
   startAt,
+  deleteDoc,
 } from 'firebase/firestore'
 import { db } from '../../shared/firebase'
 import moment from 'moment'
@@ -23,6 +24,7 @@ const SET_POST = 'SET_POST'
 const ADD_POST = 'ADD_POST'
 const EDIT_POST = 'EDIT_POST'
 const LOADING = 'LOADING'
+const DELETE_POST = 'DELETE_POST'
 
 // export function loadPost(post) {
 //   return { type: SET_POST, post }
@@ -35,6 +37,8 @@ const editPost = createAction(EDIT_POST, (post_id, post) => ({
   post,
 }))
 const loading = createAction(LOADING, (is_loading) => ({ is_loading }))
+
+const deletePost = createAction(DELETE_POST, (post_id) => ({ post_id }))
 
 const initialState = {
   list: [],
@@ -68,7 +72,7 @@ const addPostFB = (contents = '') => {
     const _post = {
       ...initialPost,
       contents: contents,
-      insert_dt: moment().format('YYYY-MM-dd kk:mm:ss'),
+      insert_dt: moment().format('YYYY-MM-dd'),
     }
 
     const _image = getState().image.preview
@@ -195,13 +199,15 @@ const editPostFB = (post_id = null, post = {}) => {
     console.log(postDB)
 
     if (_image === _post.image_url) {
-      await updateDoc(postDB, post).then((doc) => {
+      await updateDoc(postDB, { post }).then(() => {
         dispatch(editPost(post_id, { ...post }))
         history.replace('/')
-        dispatch(imageActions.setPreview(null))
       })
+
+      return
     } else {
       const _user = getState().user.user
+
       const storageRef = ref(
         storage,
         `images/${_user.uid}_${new Date().getTime()}`,
@@ -215,10 +221,9 @@ const editPostFB = (post_id = null, post = {}) => {
           })
           .then(async (url) => {
             try {
-              await updateDoc(postDB, { post }).then((doc) => {
+              await updateDoc(postDB, { post }).then(() => {
                 dispatch(editPost(post_id, { ...post, image_url: url }))
                 history.replace('/')
-                dispatch(imageActions.setPreview(null))
               })
             } catch (err) {
               window.alert('앗! 이미지 업로드에 문제가 있어요!')
@@ -257,6 +262,15 @@ const getOnePostFB = (id) => {
   }
 }
 
+const deletePostFB = (post_id) => {
+  return async function (dispatch) {
+    const docRef = doc(db, 'post', post_id)
+    await deleteDoc(docRef)
+    alert('삭제합니다요~')
+    dispatch(deletePost(post_id))
+  }
+}
+
 export default handleActions(
   {
     [SET_POST]: (state, action) =>
@@ -291,6 +305,10 @@ export default handleActions(
       produce(state, (draft) => {
         draft.is_loading = action.payload.is_loading
       }),
+    [DELETE_POST]: (state, action) =>
+      produce(state, (draft) => {
+        draft.list = draft.list.filter((l) => l.id !== action.payload.post_id)
+      }),
   },
   initialState,
 )
@@ -302,6 +320,7 @@ const actionCreators = {
   addPostFB,
   editPostFB,
   getOnePostFB,
+  deletePostFB,
 }
 
 export { actionCreators }
