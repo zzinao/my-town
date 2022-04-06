@@ -7,24 +7,39 @@ import {
   addDoc,
   getDocs,
   collection,
+  query,
+  orderBy,
+  limit,
+  updateDoc,
+  startAt,
 } from 'firebase/firestore'
 import { db } from '../../shared/firebase'
 import moment from 'moment'
 import { getStorage, ref, uploadString, getDownloadURL } from 'firebase/storage'
 import { actionCreators as imageActions } from './image'
+import { add } from 'lodash'
 
 const SET_POST = 'SET_POST'
 const ADD_POST = 'ADD_POST'
+const EDIT_POST = 'EDIT_POST'
+const LOADING = 'LOADING'
 
-export function loadPost(post) {
-  return { type: SET_POST, post }
-}
+// export function loadPost(post) {
+//   return { type: SET_POST, post }
+// }
 
 const setPost = createAction(SET_POST, (post_list) => ({ post_list }))
 const addPost = createAction(ADD_POST, (post) => ({ post }))
+const editPost = createAction(EDIT_POST, (post_id, post) => ({
+  post_id,
+  post,
+}))
+const loading = createAction(LOADING, (is_loading) => ({ is_loading }))
 
 const initialState = {
   list: [],
+  paging: { start: null, next: null, size: 3 },
+  is_loading: false,
 }
 
 const initialPost = {
@@ -53,12 +68,10 @@ const addPostFB = (contents = '') => {
     const _post = {
       ...initialPost,
       contents: contents,
-      insert_dt: moment().format('YYYY-MM-dd hh:mm:ss'),
+      insert_dt: moment().format('YYYY-MM-dd kk:mm:ss'),
     }
 
     const _image = getState().image.preview
-    console.log(_image)
-    console.log(typeof _image)
 
     const storage = getStorage()
     const storageRef = ref(
@@ -93,13 +106,31 @@ const addPostFB = (contents = '') => {
   }
 }
 
-export const getPostFB = () => {
+export const getPostFB = (start = null, size = 3) => {
   return async function (dispatch) {
+    dispatch(loading(true))
     const post_data = await getDocs(collection(db, 'post'))
+    const postRef = collection(db, 'post')
+    // 시간 순 정렬 (왜 안돼,,,)
+    const q = start
+      ? query(
+          postRef,
+          orderBy('insert_dt', 'desc'),
+          startAt(start),
+          limit(size + 1),
+        )
+      : query(postRef, orderBy('insert_dt', 'desc'), limit(2))
+    const post = await getDocs(q)
     let post_list = []
+    let paging = {
+      start: post.docs[0],
+      next:
+        post.docs.length === size + 1 ? post.docs[post.docs.length - 1] : null,
+      size: size,
+    }
     post_data.forEach((doc) => {
       let _post = { id: doc.id, ...doc.data() }
-      console.log(_post)
+      // console.log(_post)
       let post = Object.keys(_post).reduce(
         (acc, cur) => {
           if (cur.indexOf('user_') !== -1) {
@@ -126,8 +157,9 @@ export const getPostFB = () => {
       // }
       post_list.push(post)
     })
-    dispatch(setPost(post_list))
-    console.log(post_list)
+    dispatch(setPost(post_list, paging))
+    // console.log(post_list)
+    // })
   }
 }
 // export default function reducer(state = initialState, action = {}) {
@@ -144,16 +176,120 @@ export const getPostFB = () => {
 //       return state
 //   }
 // }
+
+//수정
+const editPostFB = (post_id = null, post = {}) => {
+  return async function (dispatch, getState, { history }) {
+    // if (!post_id) {
+    //   console.log('게시물 정보가 없어요!')
+    //   return
+    // }
+    const _image = getState().image.preview
+    const storage = getStorage()
+    const post_idx = getState().post.list.findIndex((p) => p.id === post_id)
+    const _post = getState().post.list[post_idx]
+
+    // const uid = getState().user.user.user_id
+    // console.log(uid)
+    const postDB = collection(db, 'post')
+    console.log(postDB)
+
+    if (_image === _post.image_url) {
+      await updateDoc(postDB, post).then((doc) => {
+        dispatch(editPost(post_id, { ...post }))
+        history.replace('/')
+        dispatch(imageActions.setPreview(null))
+      })
+    } else {
+      const _user = getState().user.user
+      const storageRef = ref(
+        storage,
+        `images/${_user.uid}_${new Date().getTime()}`,
+      )
+      uploadString(storageRef, _image, 'data_url').then((snapshot) => {
+        getDownloadURL(snapshot.ref)
+          .then((url) => {
+            dispatch(imageActions.uploadImage(url))
+            console.log(url)
+            return url
+          })
+          .then(async (url) => {
+            try {
+              await updateDoc(postDB, { post }).then((doc) => {
+                dispatch(editPost(post_id, { ...post, image_url: url }))
+                history.replace('/')
+                dispatch(imageActions.setPreview(null))
+              })
+            } catch (err) {
+              window.alert('앗! 이미지 업로드에 문제가 있어요!')
+              console.log('앗! 이미지 업로드에 문제가 있어요!', err)
+            }
+          })
+      })
+    }
+
+    console.log(_post)
+  }
+}
+
+const getOnePostFB = (id) => {
+  return async function (dispatch, getState, { history }) {
+    const postDB = await getDocs(collection(db, 'post'))
+    postDB.forEach((doc) => {
+      let _post = doc.data()
+      if (!_post) {
+        return
+      }
+      let post = Object.keys(_post).reduce(
+        (acc, cur) => {
+          if (cur.indexOf('user_') !== -1) {
+            return {
+              ...acc,
+              user_info: { ...acc.user_info, [cur]: _post[cur] },
+            }
+          }
+          return { ...acc, [cur]: _post[cur] }
+        },
+        { id: _post.id, user_info: {} },
+      )
+      dispatch(setPost([post]))
+    })
+  }
+}
+
 export default handleActions(
   {
     [SET_POST]: (state, action) =>
       produce(state, (draft) => {
-        draft.list = action.payload.post_list
+        draft.list.push(...action.payload.post_list)
+
+        draft.ist = draft.list.reduce((acc, cur) => {
+          if (acc.findIndex((a) => a.id === cur.id) === -1) {
+            return [...acc, cur]
+          } else {
+            acc[acc.findIndex((a) => a.id === cur.id)] = cur
+            return acc
+          }
+        }, [])
+        if (action.payload.paging) {
+          draft.paging = action.payload.paging
+        }
+
+        draft.is_loading = false
       }),
 
     [ADD_POST]: (state, action) =>
       produce(state, (draft) => {
         draft.list.unshift(action.payload.post)
+      }),
+    [EDIT_POST]: (state, action) =>
+      produce(state, (draft) => {
+        let idx = draft.list.findIndex((p) => (p.id = action.payload.post))
+        draft.list[idx] = { ...draft.list[idx], ...action.payload.post }
+      }),
+    [LOADING]: (state, action) =>
+      produce(state, (draft) => {
+        draft.is_loading = action.payload.is_loading
       }),
   },
   initialState,
@@ -164,6 +300,8 @@ const actionCreators = {
   addPost,
   getPostFB,
   addPostFB,
+  editPostFB,
+  getOnePostFB,
 }
 
 export { actionCreators }

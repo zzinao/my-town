@@ -1,24 +1,53 @@
 import React from 'react'
-import { Grid, Image, Text } from '../elements/index'
+import { Grid, Image, Text, Button } from '../elements/index'
+import { history } from '../redux/configureStore'
+import { FiEdit3 } from 'react-icons/fi'
 
 const Post = (props) => {
-  console.log(props)
   return (
     <React.Fragment>
       <Grid>
-        <Grid is_flex>
-          <Image shape="circle" src={props.src} />
-          <Text bold>{props.user_info.user_name}</Text>
-          <Text bold>{props.insert_dt}</Text>
+        <Grid is_flex padding="16px">
+          <Grid is_flex width="auto">
+            <Image shape="circle" src={props.src} />
+            <Text bold>{props.user_info.user_name}</Text>
+          </Grid>
+          <Grid is_flex width="35%" is_flex>
+            <Text>{props.insert_dt}</Text>
+            {props.is_me && (
+              <FiEdit3
+                size="20"
+                onClick={() => {
+                  history.push(`/write/${props.id}`)
+                }}
+              />
+              // <Button
+              //   width="auto"
+              //   margin="2px"
+              //   padding="2px"
+              //   text="수정"
+              //   _onClick={() => {
+              //     history.push(`/write/${props.id}`)
+              //   }}
+              // />
+            )}
+          </Grid>
         </Grid>
-        <Grid padding="16px">
-          <Text>{props.contents}</Text>
-        </Grid>
-        <Grid>
-          <Image shape="rectangle" src={props.image_url} />
-        </Grid>
-        <Grid padding="16px">
-          <Text>댓글{props.comment_cnt}개</Text>
+
+        <Grid
+          _onClick={() => {
+            history.push(`/post/${props.id}`)
+          }}
+        >
+          <Grid padding="16px">
+            <Text>{props.contents}</Text>
+          </Grid>
+          <Grid>
+            <Image shape="rectangle" src={props.image_url} />
+          </Grid>
+          <Grid padding="16px">
+            <Text>댓글{props.comment_cnt}개</Text>
+          </Grid>
         </Grid>
       </Grid>
     </React.Fragment>
@@ -36,5 +65,6 @@ Post.defaultProps = {
   contents: '애옹..?',
   comment_cnt: 10,
   insert_dt: '2022-04-01 10:00:00',
+  is_me: false,
 }
 export default Post

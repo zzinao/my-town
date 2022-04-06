@@ -12,6 +12,8 @@ import Header from '../components/Header'
 import Permit from './Permit'
 import PostWrite from '../pages/PostWrite'
 import PostDetail from '../pages/PostDetail'
+import Search from './Search'
+import Notification from '../pages/Notification'
 
 import { BsPlusCircleFill } from 'react-icons/bs'
 import { useDispatch } from 'react-redux'
@@ -30,7 +32,7 @@ function App(props) {
     }
   })
   return (
-    <React.Fragment>
+    <Container>
       <Grid>
         <ConnectedRouter history={history}>
           <Header />
@@ -38,29 +40,37 @@ function App(props) {
           <Route path="/login" exact component={Login} />
           <Route path="/signup" exact component={Signup} />
           <Route path="/write" exact component={PostWrite} />
+          <Route path="/write/:id" exact component={PostWrite} />
           <Route path="/post/:id" exact component={PostDetail} />
+          <Route path="/search" exact component={Search} />
+          <Route path="/noti" exact component={Notification} />
         </ConnectedRouter>
       </Grid>
       <Permit>
         <Navigation>
           <BsPlusCircleFill
             className="plus_btn"
-            size="80"
+            size="60"
             onClick={() => {
               history.push('/write')
             }}
           />
         </Navigation>
       </Permit>
-    </React.Fragment>
+    </Container>
   )
 }
+const Container = styled.div`
+  width: 800px;
+  margin: 0 auto;
+`
 
 const Navigation = styled.nav`
   .plus_btn {
-    margin: 30px;
-    float: right;
-    color: #f5cd40;
+    color: #ddd;
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
   }
 `
 

@@ -7,38 +7,54 @@ import { actionCreators as userActions } from '../redux/modules/User'
 
 import { history } from '../redux/configureStore'
 import { apiKey } from '../shared/firebase'
-import Permit from '../shared/Permit'
+
+import NotiBadge from './NotiBadge'
+import { FiLogOut } from 'react-icons/fi'
 
 const Header = (props) => {
   const dispatch = useDispatch()
   const is_login = useSelector((state) => state.user.is_login)
+  const user_info = useSelector((state) => state.user.user)
+
   const _session_key = `firebase:authUser:${apiKey}:[DEFAULT]`
   const is_session = sessionStorage.getItem(_session_key) ? true : false
-
-  console.log(_session_key)
-  console.log(is_login)
-  console.log(is_session)
-  console.log(sessionStorage.getItem(_session_key))
 
   if (is_login && is_session) {
     return (
       <React.Fragment>
         <Grid is_flex padding="4px 16px">
           <Grid>
-            <Text margin="0px" size="24px" bold>
+            <Text
+              _onClick={() => {
+                window.location.replace('/')
+              }}
+              margin="0px"
+              size="24px"
+              bold
+            >
               안뇽
             </Text>
           </Grid>
 
           <Grid is_flex>
             <Button text="내정보"></Button>
-            <Button text="알림"></Button>
-            <Button
+            <NotiBadge
+              _onClick={() => {
+                history.push('./noti')
+              }}
+            ></NotiBadge>
+            <FiLogOut
+              size="25"
+              onClick={() => {
+                dispatch(userActions.logoutFB())
+              }}
+            />
+            {/* <Button
               text="로그아웃"
               _onClick={() => {
                 dispatch(userActions.logoutFB())
               }}
-            ></Button>
+            ></Button> */}
           </Grid>
         </Grid>
       </React.Fragment>
@@ -49,7 +65,14 @@ const Header = (props) => {
     <React.Fragment>
       <Grid is_flex padding="4px 16px">
         <Grid>
-          <Text margin="0px" size="24px" bold>
+          <Text
+            _onClick={() => {
+              window.location.replace('/')
+            }}
+            margin="0px"
+            size="24px"
+            bold
+          >
             안뇽
           </Text>
         </Grid>
@@ -58,13 +81,13 @@ const Header = (props) => {
           <Button
             text="로그인"
             _onClick={() => {
-              history.push('./login')
+              history.push('/login')
             }}
           ></Button>
           <Button
             text="회원가입"
             _onClick={() => {
-              history.push('./signup')
+              history.push('/signup')
             }}
           ></Button>
         </Grid>

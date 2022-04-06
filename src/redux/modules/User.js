@@ -37,24 +37,24 @@ const loginFB = (id, pwd) => {
   return function (dispatch, getState, { history }) {
     const auth = getAuth()
     setPersistence(auth, browserSessionPersistence).then((res) => {
-      signInWithEmailAndPassword(auth, id, pwd).then((userCredential) => {
-        const user = userCredential.user
-        dispatch(
-          setUser({
-            user_name: user.user.displayName,
-            id: id,
-            user_profile: '',
-            uid: user.user.uid,
-          }),
-        )
-
-        return signInWithEmailAndPassword(auth, id, pwd)
-        // ...
-      })
-      history.push('/').catch((error) => {
-        const errorCode = error.code
-        const errorMessage = error.message
-      })
+      signInWithEmailAndPassword(auth, id, pwd)
+        .then((user) => {
+          dispatch(
+            setUser({
+              user_name: user.user.displayName,
+              id: id,
+              user_profile: '',
+              uid: user.user.uid,
+            }),
+          )
+          history.push('/')
+          // return signInWithEmailAndPassword(auth, id, pwd)
+          // ...
+        })
+        .catch((error) => {
+          const errorCode = error.code
+          const errorMessage = error.message
+        })
     })
   }
 }
@@ -109,9 +109,7 @@ const loginCheckFB = () => {
             uid: user.uid,
           }),
         )
-        // ...
-      } else {
-        dispatch(logOut())
+        history.push('/')
       }
     })
   }
