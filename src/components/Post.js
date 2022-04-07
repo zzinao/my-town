@@ -21,7 +21,7 @@ const Post = (props) => {
             <Image shape="circle" src={props.src} />
             <Text bold>{props.user_info.user_name}</Text>
           </Grid>
-          <Grid is_flex width="240px" is_flex>
+          <Grid is_flex width="180px" is_flex>
             <Text>{props.insert_dt}</Text>
             {props.is_me && (
               <>

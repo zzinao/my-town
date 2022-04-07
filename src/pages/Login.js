@@ -29,7 +29,6 @@ const Login = (props) => {
         </Text>
         <Container>
           <Grid padding="12px 0 0">
-            <span>아이디</span>
             <Input
               label="id"
               value={id}
@@ -41,7 +40,6 @@ const Login = (props) => {
           </Grid>
 
           <Grid>
-            <span>비밀번호</span>
             <Input
               label="pw"
               value={pwd}
